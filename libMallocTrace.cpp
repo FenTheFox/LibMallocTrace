@@ -60,7 +60,7 @@ void free(void *ptr) {
 }
 
 void *mmap(void *addr, size_t sz, int prot, int flags, int fd, off_t offset) {
-	void *ptr = (*mmap_ptr)(addr, sz, prot, flags, fd, offset);
+	void *ptr = (*mmap_ptr)(addr, sz, prot, flags ^ 0x100, fd, offset);
 	if (MAP_ANONYMOUS & flags && !(flags & 0x100)) {
 		log("mmap", sz);
 		mmapArr[arrPtr++] = (size_t) ptr;
