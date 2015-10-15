@@ -30,3 +30,4 @@
 .idea
 bin
 logfile.txt
+.gitignore

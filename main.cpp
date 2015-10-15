@@ -15,7 +15,7 @@ size_t rand(size_t max) {
 
 int main() {
 	std::vector<char *> v;
-	printf("staring allocs");
+	printf("staring allocs\n");
 	for (int i = 0; i < 100; ++i)
 		v.push_back((char *)malloc(rand(4096)));
 
@@ -23,7 +23,7 @@ int main() {
 		if (rand(1))
 			v.push_back((char *)malloc(rand(4096)));
 		else {
-			int idx = rand(v.size() - 1);
+			size_t idx = rand(v.size() - 1);
 			free(v[idx]);
 			v.erase(v.begin() + idx);
 		}
