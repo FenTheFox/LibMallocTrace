@@ -1,9 +1,12 @@
-CPPFLAGS=-g -O2 -std=c++11
-LIBFLAGS=-IHeap-Layers -ldl -shared -fPIC $(CPPFLAGS)
+CPPFLAGS=-g -O3 -Wall -std=c++11
+LIBFLAGS=$(CPPFLAGS) -IHeap-Layers -ldl -shared -fPIC
 
-all: test libmalloctrace.so
+all: setup tester libmalloctrace.so
 
-test: main.cpp
+setup:
+	mkdir -p bin
+
+tester: main.cpp
 	g++ -o bin/$@ $(CPPFLAGS) $^
 
 libmalloctrace.so: libMallocTrace.cpp
