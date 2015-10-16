@@ -7,5 +7,5 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O2")
 set(CMAKE_SHARED_LINKER_FLAGS "-ldl -shared")
 
-add_library(MallocTrace libMallocTrace.cpp)
+add_library(malloctrace libMallocTrace.cpp libMallocTrace.h)
 add_executable(tester main.cpp)
