@@ -1,4 +1,5 @@
 #include "libMallocTrace.h"
+#include <execinfo.h>
 
 trace_map_t *mallocMap, *mmapMap;
 
@@ -18,6 +19,7 @@ FUNCP_DECL(valloc);
 FUNCP_DECL(malloc_usable_size);
 FUNCP_DECL(mmap);
 FUNCP_DECL(munmap);
+FUNCP_DECL(sbrk);
 
 void log(const char *func, size_t sz);
 
@@ -52,6 +54,7 @@ __attribute__((constructor)) void init() {
 	FUNCP_INIT(malloc_usable_size);
 	FUNCP_INIT(mmap);
 	FUNCP_INIT(munmap);
+	FUNCP_INIT(sbrk);
 
 	printf("init'd with library %s\n", getenv("MALLOC_LIB"));
 }
@@ -99,9 +102,26 @@ void free(void *ptr) {
 	if(ptr > boot_buf_start && ptr < boot_buf_curr)
 		return;
 	IF_NULL(free, ptr);
-	log("free", (*mallocMap)[ptr]);
+	size_t sz = (*mallocMap)[ptr];
+	if(sz == 0) {
+		for (auto it = mallocMap->begin(); it != mallocMap->end(); it++) {
+			char *start = static_cast<char *>(it->first);
+			if(ptr > start && ptr < start + it->second)
+				sz = it->second;
+		}
+	}
+	log("free", sz);
 	mallocMap->erase(ptr);
-	(*free_ptr)(ptr);
+	if(sz)
+		(*free_ptr)(ptr);
+	else if (ptr) {
+		void *array[10];
+		int size;
+
+		// get void*'s for all entries on the stack
+		size = backtrace(array, 10);
+		backtrace_symbols(array, size);
+	}
 }
 
 void *memalign (size_t align, size_t sz) {
@@ -217,8 +237,10 @@ int brk(void *addr) {
 }
 
 void *sbrk(intptr_t increment) {
-	fprintf(stderr, "sbrk called\n");
-	abort();
+	IF_NULL(sbrk, increment);
+	auto ptr = (*sbrk_ptr)(increment);
+	log("sbrk", increment);
+	return ptr;
 }
 
 void *mremap(void *old_address, size_t old_size, size_t new_size, int flags, ... /* void *new_address */) {

@@ -39,6 +39,7 @@ typedef void * aligned_alloc_func      (size_t, size_t);
 typedef void * valloc_func             (size_t);
 typedef size_t malloc_usable_size_func (void *);
 
-typedef void * mmap_func (void *, size_t, int, int, int, off_t);
-typedef int munmap_func (void *, size_t);
+typedef void * mmap_func               (void *, size_t, int, int, int, off_t);
+typedef int    munmap_func             (void *, size_t);
+typedef void * sbrk_func               (intptr_t);
 #endif //LIBMALLOCTRACE_LIBMALLOCTRACE_H
