@@ -210,6 +210,13 @@ int munmap(void *ptr, size_t sz) {
 	return (*munmap_ptr)(ptr, sz);
 }
 
+void *sbrk(intptr_t increment) {
+	IF_NULL(sbrk, increment);
+	auto ptr = (*sbrk_ptr)(increment);
+	log("sbrk", increment);
+	return ptr;
+}
+
 /*
  * logging helper functions
  */
@@ -234,13 +241,6 @@ void log(const char *func, size_t sz) {
 int brk(void *addr) {
 	fprintf(stderr, "brk called\n");
 	abort();
-}
-
-void *sbrk(intptr_t increment) {
-	IF_NULL(sbrk, increment);
-	auto ptr = (*sbrk_ptr)(increment);
-	log("sbrk", increment);
-	return ptr;
 }
 
 void *mremap(void *old_address, size_t old_size, size_t new_size, int flags, ... /* void *new_address */) {
