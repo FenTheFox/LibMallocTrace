@@ -55,8 +55,6 @@ __attribute__((constructor)) void init() {
 	FUNCP_INIT(mmap);
 	FUNCP_INIT(munmap);
 	FUNCP_INIT(sbrk);
-
-	printf("init'd with library %s\n", getenv("MALLOC_LIB"));
 }
 
 #define LOG(ptr, sz) if (ptr != NULL && sz > 0) { \
@@ -75,9 +73,12 @@ void *malloc(size_t sz) {
 
 void *calloc(size_t num, size_t sz) {
 	if (calloc_ptr == NULL) {
-		if (!boot_buf_start || boot_buf_curr - boot_buf_start > 65536)
+		if (!boot_buf_start || (boot_buf_curr + num * sz) - boot_buf_start > 65536) {
+			if(boot_buf_start)
+			    printf("failed to calloc %lu bytes (%lu bytes available)\n", num*sz, boot_buf_curr - boot_buf_start);
 			return NULL;
-		//so that dl{open,
+		}
+		//so that dlopen can allocate space for the data structures required to load a new library object
 		void *ptr = boot_buf_curr;
 		boot_buf_curr += num * sz;
 		return ptr;
@@ -99,28 +100,20 @@ void *realloc(void *ptr, size_t sz) {
 }
 
 void free(void *ptr) {
-	if(ptr > boot_buf_start && ptr < boot_buf_curr)
+	if((ptr > boot_buf_start && ptr < boot_buf_curr) || !ptr)
 		return;
 	IF_NULL(free, ptr);
 	size_t sz = (*mallocMap)[ptr];
-	if(sz == 0) {
-		for (auto it = mallocMap->begin(); it != mallocMap->end(); it++) {
-			char *start = static_cast<char *>(it->first);
-			if(ptr > start && ptr < start + it->second)
-				sz = it->second;
-		}
-	}
-	log("free", sz);
-	mallocMap->erase(ptr);
-	if(sz)
+	if(mallocMap->erase(ptr)) {
+		log("free", sz);
 		(*free_ptr)(ptr);
-	else if (ptr) {
+	} else {
 		void *array[10];
 		int size;
 
 		// get void*'s for all entries on the stack
 		size = backtrace(array, 10);
-		backtrace_symbols(array, size);
+		backtrace_symbols_fd(array, size, logFile);
 	}
 }
 
@@ -213,7 +206,8 @@ int munmap(void *ptr, size_t sz) {
 void *sbrk(intptr_t increment) {
 	IF_NULL(sbrk, increment);
 	auto ptr = (*sbrk_ptr)(increment);
-	log("sbrk", increment);
+	if(increment != 0)
+		log("sbrk", increment);
 	return ptr;
 }
 
@@ -228,14 +222,14 @@ size_t strlen(char *str, size_t len = 37) {
 }
 
 void log(const char *func, size_t sz) {
-//	printf("%s %lu", func, sz);
 	char buf[37];
 	snprintf(buf, 37, "%s %lu\n", func, sz);
 	write(logFile, buf, strlen(buf));
 }
 
 /*
- * Funcs we don't want to/have not yet replace(d), and hopefully don't have to. We abort because if they are being used we need to implement them
+ * Funcs we don't want to/have not yet replace(d), and hopefully don't have to.
+ * We abort because if they are being used we need to implement them
  */
 
 int brk(void *addr) {

@@ -19,4 +19,4 @@ test: tester libmalloctrace.so
 	LD_PRELOAD=./bin/libmalloctrace.so bin/tester
 
 clean:
-	rm bin/*
+	rm -rf bin/*

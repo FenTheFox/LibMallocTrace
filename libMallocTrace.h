@@ -2,8 +2,8 @@
 // Created by tallman on 10/15/15.
 //
 
-#ifndef LIBMALLOCTRACE_LIBMALLOCTRACE_H
-#define LIBMALLOCTRACE_LIBMALLOCTRACE_H
+#ifndef LIBMALLOCTRACE_H
+#define LIBMALLOCTRACE_H
 
 #include <map>
 
@@ -16,8 +16,10 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include "wrappers/stlallocator.h"
 #include "heaps/top/mmapheap.h"
+#include "wrappers/stlallocator.h"
+//TODO: make use of this include by implementing everything in a class
+#include "wrappers/ansiwrapper.h"
 
 #ifndef MMAP_ARR_SIZE
 #define MMAP_ARR_SIZE 1024
@@ -42,4 +44,4 @@ typedef size_t malloc_usable_size_func (void *);
 typedef void * mmap_func               (void *, size_t, int, int, int, off_t);
 typedef int    munmap_func             (void *, size_t);
 typedef void * sbrk_func               (intptr_t);
-#endif //LIBMALLOCTRACE_LIBMALLOCTRACE_H
+#endif //LIBMALLOCTRACE_H
